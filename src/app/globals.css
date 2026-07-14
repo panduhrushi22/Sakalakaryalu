@@ -1,0 +1,236 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #fdfcf7; /* Sacred Cream */
+  --foreground: #2d2a26; /* Deep Stone Charcoal */
+  --saffron: #d97706; /* Saffron Orange */
+  --vermilion: #b91c1c; /* Kumkum Vermilion */
+  --gold: #ca8a04; /* Temple Gold */
+  --gold-light: #fef08a;
+  --accent-soft: #fbf5e6;
+}
+
+body {
+  color: var(--foreground);
+  background-color: var(--background);
+  font-family: 'Inter', 'Outfit', sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Premium Typography Helper Classes */
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-lora {
+  font-family: 'Lora', serif;
+}
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Divine Accents & Patterns */
+.temple-border {
+  border: 4px double var(--gold);
+}
+
+.glow-saffron {
+  box-shadow: 0 0 15px rgba(217, 119, 6, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glow-saffron:hover {
+  box-shadow: 0 0 25px rgba(217, 119, 6, 0.45);
+  transform: translateY(-2px);
+}
+
+.glow-gold {
+  box-shadow: 0 0 15px rgba(202, 138, 4, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glow-gold:hover {
+  box-shadow: 0 0 25px rgba(202, 138, 4, 0.45);
+  transform: translateY(-2px);
+}
+
+/* Custom Scrollbar for Spiritual Journey */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f3e9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ca8a04;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b91c1c;
+}
+
+/* Custom Leaflet Map styling */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 0.75rem;
+  z-index: 1;
+}
+
+/* Printing styles for checklists, guides */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12pt;
+  }
+  
+  header, footer, nav, button, .no-print, .leaflet-container {
+    display: none !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  .print-card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    margin-bottom: 1rem !important;
+    page-break-inside: avoid !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  th, td {
+    border: 1px solid #000000 !important;
+    padding: 0.5rem !important;
+  }
+
+  input[type="checkbox"] {
+    border: 1px solid #000 !important;
+    background: transparent !important;
+  }
+}
+
+/* Animate entrance of components */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Premium Hero Animations & Styles */
+@keyframes kenBurns {
+  0% {
+    transform: scale(1.05) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.15) translate(-1%, -1%);
+  }
+  100% {
+    transform: scale(1.05) translate(0, 0);
+  }
+}
+
+.animate-ken-burns {
+  animation: kenBurns 20s ease-in-out infinite;
+}
+
+@keyframes bounceSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounceSlow 2s ease-in-out infinite;
+}
+
+/* Smooth title fade & pop-up from down to up */
+@keyframes titlePopUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-title-popup {
+  animation: titlePopUp 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-tagline-popup {
+  opacity: 0;
+  animation: titlePopUp 2.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+}
+
+/* Slow 2.5s Pop Up hover transition */
+.hover-pop-slow {
+  transition: transform 2.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 2.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-pop-slow:hover {
+  transform: translateY(-15px) scale(1.025);
+  box-shadow: 0 30px 60px -15px rgba(251, 191, 36, 0.22); /* Soft golden aura */
+}
+
+
+.text-glow-gold {
+  text-shadow: 0 0 10px rgba(254, 240, 138, 0.3), 0 0 20px rgba(202, 138, 4, 0.2);
+}
+
+.text-glow-white {
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.5), 0 0 24px rgba(255, 255, 255, 0.25);
+}
+
+.glass-vignette {
+  background: radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.85) 100%);
+}
+
+
+
+/* Premium Hover Transitions for Buttons, Links, and Cards */
+.hover-premium {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hover-premium:hover {
+  transform: translateY(-5px) scale(1.025);
+  box-shadow: 0 20px 30px -10px rgba(217, 119, 6, 0.25), 0 0 15px rgba(251, 191, 36, 0.15);
+}
+
+/* Animate text or icon nested inside premium hover container */
+.hover-premium-icon {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hover-premium:hover .hover-premium-icon {
+  transform: translateX(4px) scale(1.1);
+}
+
+

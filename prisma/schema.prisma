@@ -1,0 +1,196 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Puja {
+  id           String     @id @default(uuid())
+  name         String
+  slug         String     @unique
+  category     String     // e.g. "daily", "festival", "vratham", "homam", "ritual"
+  duration     String     // e.g. "1.5 Hours"
+  difficulty   String     // e.g. "Medium", "Simple", "Complex"
+  intro        String
+  significance String
+  benefits     String     // Description of benefits
+  bestTime     String     // e.g. "Sravana Masam, Fridays"
+  image        String
+  deityName      String     @default("Deity")
+  heroImage      String     @default("/images/general-puja.png")
+  thumbnailImage String     @default("/images/general-puja.png")
+  bannerImage    String     @default("/images/general-puja.png")
+  themeColors    String     @default("gold") // saffron, blue, gold, red, gold-pink
+  youtubeUrl   String?
+  items        PujaItem[]
+  steps        PujaStep[]
+  mantras      Mantra[]
+  bookings     Booking[]
+  kitOrders    PujaKitOrder[]
+  translations PujaTranslation[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model PujaItem {
+  id         String  @id @default(uuid())
+  name       String
+  quantity   String
+  isRequired Boolean @default(true)
+  price      Float   @default(29.0)
+  pujaId     String
+  puja       Puja    @relation(fields: [pujaId], references: [id], onDelete: Cascade)
+  translations PujaItemTranslation[]
+}
+
+model PujaStep {
+  id          String @id @default(uuid())
+  stepNumber  Int
+  title       String
+  description String
+  pujaId      String
+  puja        Puja   @relation(fields: [pujaId], references: [id], onDelete: Cascade)
+}
+
+model Mantra {
+  id             String  @id @default(uuid())
+  name           String
+  sanskrit       String
+  telugu         String
+  english        String
+  meaning        String
+  audioUrl       String?
+  pujaId         String
+  puja           Puja    @relation(fields: [pujaId], references: [id], onDelete: Cascade)
+  translations   MantraTranslation[]
+}
+
+model Festival {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  date         String   // e.g. "2026-03-19"
+  significance String
+  rituals      String
+  image        String
+  translations FestivalTranslation[]
+  createdAt    DateTime @default(now())
+}
+
+model Pujari {
+  id             String    @id @default(uuid())
+  seedId         String?   @unique  // Set only for seed-generated pujaris; null for admin-created ones
+  name           String
+  experience     Int       // Years of experience
+  rating         Float     @default(5.0)
+  languages      String    // e.g. "Telugu, English, Sanskrit"
+  specialization String    // e.g. "Vrathams, Homams, Vivaham"
+  phone          String
+  whatsapp       String
+  lat            Float
+  lng            Float
+  image          String
+  address        String
+  deletedAt      DateTime? // Soft delete — if set, pujari is hidden everywhere and never restored by seed
+  bookings       Booking[]
+  createdAt      DateTime  @default(now())
+}
+
+model Booking {
+  id          String   @id @default(uuid())
+  userName    String
+  userPhone   String
+  userEmail   String
+  bookingDate String
+  bookingTime String
+  status      String   @default("PENDING") // PENDING, APPROVED, COMPLETED, CANCELLED
+  notes       String?
+  pujaId      String
+  puja        Puja     @relation(fields: [pujaId], references: [id])
+  pujariId    String
+  pujari      Pujari   @relation(fields: [pujariId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Blog {
+  id        String   @id @default(uuid())
+  title     String
+  slug      String   @unique
+  summary   String
+  content   String
+  image     String
+  readTime  String
+  date      String
+  createdAt DateTime @default(now())
+}
+
+model PujaKitOrder {
+  id              String   @id @default(uuid())
+  customerName    String
+  customerPhone   String
+  customerEmail   String
+  deliveryAddress String
+  pincode         String
+  deliveryTime    String
+  paymentMethod   String
+  status          String   @default("PLACED") // PLACED, PREPARING, OUT_FOR_DELIVERY, DELIVERED
+  totalPrice      Float
+  itemsJson       String
+  pujaId          String
+  puja            Puja     @relation(fields: [pujaId], references: [id])
+  createdAt       DateTime @default(now())
+}
+
+model PujaTranslation {
+  id           String @id @default(uuid())
+  pujaId       String
+  languageCode String // te, hi, ta, kn, ml, mr
+  name         String
+  intro        String
+  significance String
+  benefits     String
+  bestTime     String
+  puja         Puja   @relation(fields: [pujaId], references: [id], onDelete: Cascade)
+  @@unique([pujaId, languageCode])
+}
+
+model PujaItemTranslation {
+  id           String   @id @default(uuid())
+  itemId       String
+  languageCode String
+  name         String
+  item         PujaItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  @@unique([itemId, languageCode])
+}
+
+model MantraTranslation {
+  id           String @id @default(uuid())
+  mantraId     String
+  languageCode String
+  meaning      String
+  mantra       Mantra @relation(fields: [mantraId], references: [id], onDelete: Cascade)
+  @@unique([mantraId, languageCode])
+}
+
+model FestivalTranslation {
+  id           String   @id @default(uuid())
+  festivalId   String
+  languageCode String
+  name         String
+  description  String
+  ritual       String
+  festival     Festival @relation(fields: [festivalId], references: [id], onDelete: Cascade)
+  @@unique([festivalId, languageCode])
+}

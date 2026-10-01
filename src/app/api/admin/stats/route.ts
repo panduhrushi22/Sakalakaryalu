@@ -9,12 +9,13 @@ export async function GET(request: Request) {
     }
 
     // Run parallel counts for fast performance
-    const [bookingsCount, pujarisCount, pujasCount, blogsCount, ordersCount, recentBookings, recentOrders] = await Promise.all([
+    const [bookingsCount, pujarisCount, pujasCount, blogsCount, ordersCount, panchangamCount, recentBookings, recentOrders] = await Promise.all([
       prisma.booking.count(),
       prisma.pujari.count({ where: { deletedAt: null } }),
       prisma.puja.count(),
       prisma.blog.count(),
       prisma.pujaKitOrder.count(),
+      prisma.panchangam.count(),
       prisma.booking.findMany({
         take: 5,
         orderBy: { createdAt: 'desc' },
@@ -53,6 +54,7 @@ export async function GET(request: Request) {
         pujas: pujasCount,
         blogs: blogsCount,
         orders: ordersCount,
+        panchangam: panchangamCount,
       },
       recentBookings: mappedBookings,
       recentOrders,

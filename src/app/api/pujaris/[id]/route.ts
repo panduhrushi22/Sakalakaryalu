@@ -2,13 +2,16 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyAdminAccess } from '@/lib/auth';
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
   try {
     if (!verifyAdminAccess(request, ['super_admin', 'admin'])) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await Promise.resolve(params);
     const body = await request.json();
     const {
       name,
@@ -53,13 +56,16 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
   try {
     if (!verifyAdminAccess(request, ['super_admin', 'admin'])) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await Promise.resolve(params);
 
     const pujari = await prisma.pujari.findUnique({ where: { id } });
     if (!pujari) {

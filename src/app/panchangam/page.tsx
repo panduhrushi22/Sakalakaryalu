@@ -1,12 +1,23 @@
 import React from 'react';
-import { Calendar, Clock, Sun, Moon, Info, HelpCircle } from 'lucide-react';
+import { Calendar, Clock, Sun, Moon, Info, HelpCircle, Sparkles } from 'lucide-react';
 import { cookies } from 'next/headers';
 import { i18nDictionary, LanguageCode } from '@/lib/i18n';
+import { prisma } from '@/lib/db';
 
-export default function PanchangamPage() {
-  const cookieStore = cookies();
+export default async function PanchangamPage() {
+  const cookieStore = await cookies();
   const currentLang = (cookieStore.get('sakalakaryalu_lang')?.value || 'en') as LanguageCode;
   const dict = i18nDictionary[currentLang] || i18nDictionary['en'];
+
+  // Fetch admin custom entries from database
+  let dbEntries: any[] = [];
+  try {
+    dbEntries = await prisma.panchangam.findMany({
+      orderBy: { date: 'asc' },
+    });
+  } catch {
+    dbEntries = [];
+  }
 
   // Helper for generating dynamic weekly panchangam starting from present date
   const getPanchangamWeek = (lang: LanguageCode) => {
@@ -100,14 +111,25 @@ export default function PanchangamPage() {
         formattedDate = `${monthsEn[futureDate.getMonth()]} ${futureDate.getDate()}, ${futureDate.getFullYear()}`;
       }
 
+      const dateIso = futureDate.toISOString().split('T')[0];
+      const dbMatch = dbEntries.find((d: any) => d.date === dateIso);
+
+      const tithiVal = dbMatch ? dbMatch.tithi : tithi;
+      const nakshatraVal = dbMatch ? dbMatch.nakshatram : nakshatra;
+      const rahuVal = dbMatch ? dbMatch.rahuKalam : timings[dayOfWeek].rahu;
+      const yamaVal = dbMatch ? dbMatch.yamagandam : timings[dayOfWeek].yama;
+      const gulikaVal = dbMatch && dbMatch.gulikaKalam ? dbMatch.gulikaKalam : timings[dayOfWeek].gulika;
+      const specialEvent = dbMatch ? dbMatch.specialEvent : null;
+
       list.push({
         day: dayName,
         date: formattedDate,
-        tithi,
-        nakshatra,
-        rahu: timings[dayOfWeek].rahu,
-        yama: timings[dayOfWeek].yama,
-        gulika: timings[dayOfWeek].gulika,
+        tithi: tithiVal,
+        nakshatra: nakshatraVal,
+        rahu: rahuVal,
+        yama: yamaVal,
+        gulika: gulikaVal,
+        specialEvent,
         isToday: i === 0,
       });
     }
@@ -217,8 +239,18 @@ export default function PanchangamPage() {
                           <span className="text-[10px] text-stone-400 block">{calc.date}</span>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-stone-700 font-lora">
-                          {calc.tithi}
-                          {isToday && <span className="bg-amber-500 text-stone-950 text-[8px] font-bold ml-1.5 px-1.5 py-0.5 rounded-full uppercase font-outfit">Active</span>}
+                          <div>
+                            <span>{calc.tithi}</span>
+                            {isToday && <span className="bg-amber-500 text-stone-950 text-[8px] font-bold ml-1.5 px-1.5 py-0.5 rounded-full uppercase font-outfit">Active</span>}
+                          </div>
+                          {calc.specialEvent && (
+                            <div className="mt-1">
+                              <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-bold px-1.5 py-0.5 rounded-md font-outfit">
+                                <Sparkles className="h-2.5 w-2.5 text-amber-600" />
+                                {calc.specialEvent}
+                              </span>
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-stone-700 font-lora">{calc.nakshatra}</td>
                         <td className="px-4 py-4 whitespace-nowrap text-red-700 font-medium">{calc.rahu}</td>

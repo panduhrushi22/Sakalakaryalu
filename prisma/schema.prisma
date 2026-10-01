@@ -203,3 +203,23 @@ model Otp {
   createdAt DateTime @default(now())
 }
 
+model Panchangam {
+  id               String   @id @default(uuid())
+  date             String   @unique // e.g. "2026-10-01"
+  dayName          String   // e.g. "Thursday"
+  tithi            String   // e.g. "Shukla Navami"
+  nakshatram       String   // e.g. "Uttara Ashadha"
+  yogam            String?  // e.g. "Siddha"
+  karanam          String?  // e.g. "Kaulava"
+  rahuKalam        String   // e.g. "01:30 PM - 03:00 PM"
+  yamagandam       String   // e.g. "06:00 AM - 07:30 AM"
+  gulikaKalam      String?  // e.g. "09:00 AM - 10:30 AM"
+  abhijitMuhurtham String?  // e.g. "11:45 AM - 12:35 PM"
+  sunrise          String   @default("06:05 AM")
+  sunset           String   @default("06:12 PM")
+  specialEvent     String?  // e.g. "Vijaya Dashami / Dussehra"
+  description      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+

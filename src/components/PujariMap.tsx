@@ -32,7 +32,7 @@ export default function PujariMap({ pujaris, userLat, userLng }: MapProps) {
 
   // 1. Initialize map on mount (default coordinates), clean up on unmount
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line
     const L = require('leaflet');
     if (!mapContainerRef.current) return;
 
@@ -62,7 +62,7 @@ export default function PujariMap({ pujaris, userLat, userLng }: MapProps) {
 
     map.invalidateSize();
 
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line
     const L = require('leaflet');
 
     const centerLat = userLat || 17.4401;

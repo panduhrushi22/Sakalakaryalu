@@ -492,7 +492,7 @@ export default function LoginPage() {
             {/* Bottom Link: Don't have an account? Sign Up */}
             <div className="text-center pt-5">
               <p className="font-outfit text-xs text-stone-500">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <button
                   type="button"
                   onClick={() => switchView('signup_email')}
@@ -528,7 +528,7 @@ export default function LoginPage() {
 
             <div className="flex items-center gap-2 p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-600 font-outfit">
               <Mail className="h-4 w-4 text-amber-700 flex-shrink-0" />
-              <span>We'll send a 6-digit OTP to your Gmail inbox from <strong>sakalakaryalu@gmail.com</strong>.</span>
+              <span>We&apos;ll send a 6-digit OTP to your Gmail inbox from <strong>sakalakaryalu@gmail.com</strong>.</span>
             </div>
 
             <button

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy": "git add -A && git diff-index --quiet HEAD || git commit -m \"deploy: site updates\"; git push origin main"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

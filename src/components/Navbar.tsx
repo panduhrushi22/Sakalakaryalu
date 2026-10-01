@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Flame, Search, Compass, Calendar, User, Home, BookOpen } from 'lucide-react';
+import { Menu, X, Flame, Compass, Calendar, Home, BookOpen } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageProvider';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import gsap from 'gsap';
@@ -11,46 +11,73 @@ import gsap from 'gsap';
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isHomeUnlocked, setIsHomeUnlocked] = useState(false);
+  const [isUser, setIsUser] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLanguage();
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
+    setVisible(true);
+    lastScrollY.current = window.scrollY;
+
     const handleScroll = () => {
-      if (window.scrollY > 20) {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > 20) {
         setScrolled(true);
       } else {
         setScrolled(false);
       }
+
+      if (isOpen) {
+        setVisible(true);
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      if (currentScrollY <= 20) {
+        setVisible(true);
+      } else if (currentScrollY > lastScrollY.current && currentScrollY - lastScrollY.current > 5) {
+        // Scrolling down: header goes upside
+        setVisible(false);
+      } else if (currentScrollY < lastScrollY.current && lastScrollY.current - currentScrollY > 5) {
+        // Scrolling up: header slides back down
+        setVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
     };
 
-    const checkUnlockState = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      setIsHomeUnlocked(customEvent.detail.unlocked);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    window.addEventListener('pageUnlockStateChange', checkUnlockState);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Check if admin is logged in (jwt token present)
-    const token = localStorage.getItem('adminToken');
-    if (token) {
-      setIsAdmin(true);
-    }
-
-    // Custom event listener for auth changes
-    const checkAuth = () => {
-      const updatedToken = localStorage.getItem('adminToken');
-      setIsAdmin(!!updatedToken);
+    // Check if user/admin is logged in
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setIsAdmin(data.user.role === 'admin');
+            setIsUser(data.user.role === 'user');
+            return;
+          }
+        }
+        setIsAdmin(false);
+        setIsUser(false);
+      } catch {
+        setIsAdmin(false);
+        setIsUser(false);
+      }
     };
 
+    checkAuth();
     window.addEventListener('authChange', checkAuth);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('pageUnlockStateChange', checkUnlockState);
       window.removeEventListener('authChange', checkAuth);
     };
   }, [pathname]);
@@ -72,15 +99,8 @@ export default function Navbar() {
     }
   }, [pathname]);
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (pathname === href) {
-      setIsOpen(false);
-      return;
-    }
-
-    e.preventDefault();
+  const handleNavClick = () => {
     setIsOpen(false);
-    router.push(href);
   };
 
   const navLinks = [
@@ -92,10 +112,14 @@ export default function Navbar() {
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    window.dispatchEvent(new Event('authChange'));
-    router.push('/admin/login');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.dispatchEvent(new Event('authChange'));
+      router.push('/login');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
   };
 
   const isHomePage = pathname === '/';
@@ -103,18 +127,20 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`z-50 transition-all duration-505 ${
+        className={`z-50 transition-transform duration-300 ease-in-out ${
           isHomePage
             ? 'opacity-0 pointer-events-none -translate-y-full absolute top-0 left-0 w-full bg-transparent text-amber-50 py-5 shadow-none'
+            : !visible
+            ? '-translate-y-full pointer-events-none sticky top-0 bg-gradient-to-r from-amber-800/95 to-amber-950/95 backdrop-blur-md shadow-md text-amber-50 py-3'
             : scrolled
-            ? 'sticky top-0 bg-gradient-to-r from-amber-800/95 to-amber-950/95 backdrop-blur-md shadow-md text-amber-50 py-3'
-            : 'sticky top-0 bg-gradient-to-r from-amber-800 to-amber-950 text-amber-50 py-4 shadow-lg'
+            ? 'translate-y-0 sticky top-0 bg-gradient-to-r from-amber-800/95 to-amber-950/95 backdrop-blur-md shadow-md text-amber-50 py-3'
+            : 'translate-y-0 sticky top-0 bg-gradient-to-r from-amber-800 to-amber-950 text-amber-50 py-4 shadow-lg'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo Section */}
-            <Link href="/" onClick={(e) => handleNavClick(e, '/')} className="flex items-center space-x-2 group">
+            <Link href="/" onClick={handleNavClick} className="flex items-center space-x-2 group">
               <div className="bg-amber-500 text-stone-900 p-2 rounded-full glow-saffron transition-transform group-hover:rotate-12 duration-300">
                 <Flame className="h-6 w-6 text-stone-950 fill-amber-950 animate-pulse" />
               </div>
@@ -136,7 +162,7 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    onClick={(e) => handleNavClick(e, link.href)}
+                    onClick={handleNavClick}
                     className={`font-outfit font-medium text-sm tracking-wide transition-colors relative py-1 hover:text-amber-300 ${
                       isActive ? 'text-amber-400 font-semibold' : 'text-amber-100'
                     }`}
@@ -149,32 +175,48 @@ export default function Navbar() {
                 );
               })}
 
-               {/* Admin Link */}
-              {isAdmin ? (
-                <div className="flex items-center space-x-4">
-                  <Link
-                    href="/admin/dashboard"
-                    onClick={(e) => handleNavClick(e, '/admin/dashboard')}
-                    className="bg-amber-600 hover:bg-amber-500 text-stone-950 font-outfit font-bold text-xs tracking-wider px-4 py-2 rounded-full transition-all hover:scale-105 border border-amber-400"
-                  >
-                    ADMIN DASHBOARD
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="text-stone-300 hover:text-red-400 text-xs tracking-wider font-semibold font-outfit"
-                  >
-                    LOGOUT
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  href="/admin/login"
-                  onClick={(e) => handleNavClick(e, '/admin/login')}
-                  className="border border-amber-500/40 hover:border-amber-400 hover:bg-amber-500/10 text-amber-300 px-4 py-1.5 rounded-full text-xs font-outfit font-semibold transition-all"
-                >
-                  {t('navAdmin')}
-                </Link>
-              )}
+               {/* Admin/User Links */}
+               {isAdmin ? (
+                 <div className="flex items-center space-x-4">
+                   <Link
+                     href="/admin/dashboard"
+                     onClick={handleNavClick}
+                     className="bg-amber-600 hover:bg-amber-500 text-stone-950 font-outfit font-bold text-xs tracking-wider px-4 py-2 rounded-full transition-all hover:scale-105 border border-amber-400"
+                   >
+                     ADMIN DASHBOARD
+                   </Link>
+                   <button
+                     onClick={handleLogout}
+                     className="text-stone-300 hover:text-red-400 text-xs tracking-wider font-semibold font-outfit"
+                   >
+                     LOGOUT
+                   </button>
+                 </div>
+               ) : isUser ? (
+                 <div className="flex items-center space-x-4">
+                   <Link
+                     href="/user"
+                     onClick={handleNavClick}
+                     className="bg-amber-600 hover:bg-amber-500 text-stone-950 font-outfit font-bold text-xs tracking-wider px-4 py-2 rounded-full transition-all hover:scale-105 border border-amber-400"
+                   >
+                     MY PORTAL
+                   </Link>
+                   <button
+                     onClick={handleLogout}
+                     className="text-stone-300 hover:text-red-400 text-xs tracking-wider font-semibold font-outfit"
+                   >
+                     LOGOUT
+                   </button>
+                 </div>
+               ) : (
+                 <Link
+                   href="/login"
+                   onClick={handleNavClick}
+                   className="border border-amber-500/40 hover:border-amber-400 hover:bg-amber-500/10 text-amber-300 px-4 py-1.5 rounded-full text-xs font-outfit font-semibold transition-all"
+                 >
+                   LOGIN
+                 </Link>
+               )}
 
               {/* Language Selector */}
               <LanguageSwitcher />
@@ -207,7 +249,7 @@ export default function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  onClick={(e) => handleNavClick(e, link.href)}
+                  onClick={handleNavClick}
                   className={`block px-4 py-3 rounded-xl font-outfit text-base font-medium tracking-wide transition-all ${
                     isActive
                       ? 'bg-amber-600/20 text-amber-400 border-l-4 border-amber-500'
@@ -220,35 +262,54 @@ export default function Navbar() {
             })}
 
              {isAdmin ? (
-              <div className="pt-4 border-t border-stone-800 space-y-2 px-4">
-                <Link
-                  href="/admin/dashboard"
-                  onClick={(e) => handleNavClick(e, '/admin/dashboard')}
-                  className="block text-center bg-amber-600 text-stone-950 font-outfit font-bold py-3 rounded-full tracking-wider hover:bg-amber-500 transition-colors"
-                >
-                  ADMIN DASHBOARD
-                </Link>
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    handleLogout();
-                  }}
-                  className="w-full text-center text-stone-400 hover:text-red-400 font-semibold py-2 transition-colors text-sm"
-                >
-                  LOGOUT
-                </button>
-              </div>
-            ) : (
-              <div className="pt-4 border-t border-stone-800 px-4">
-                <Link
-                  href="/admin/login"
-                  onClick={(e) => handleNavClick(e, '/admin/login')}
-                  className="block text-center border border-amber-500/50 text-amber-400 font-outfit font-semibold py-3 rounded-full tracking-wider hover:bg-amber-500/10 transition-all"
-                >
-                  {t('navAdmin')}
-                </Link>
-              </div>
-            )}
+               <div className="pt-4 border-t border-stone-800 space-y-2 px-4">
+                 <Link
+                   href="/admin/dashboard"
+                   onClick={handleNavClick}
+                   className="block text-center bg-amber-600 text-stone-950 font-outfit font-bold py-3 rounded-full tracking-wider hover:bg-amber-500 transition-colors"
+                 >
+                   ADMIN DASHBOARD
+                 </Link>
+                 <button
+                   onClick={() => {
+                     setIsOpen(false);
+                     handleLogout();
+                   }}
+                   className="w-full text-center text-stone-400 hover:text-red-400 font-semibold py-2 transition-colors text-sm"
+                 >
+                   LOGOUT
+                 </button>
+               </div>
+             ) : isUser ? (
+               <div className="pt-4 border-t border-stone-800 space-y-2 px-4">
+                 <Link
+                   href="/user"
+                   onClick={handleNavClick}
+                   className="block text-center bg-amber-600 text-stone-950 font-outfit font-bold py-3 rounded-full tracking-wider hover:bg-amber-500 transition-colors"
+                 >
+                   MY PORTAL
+                 </Link>
+                 <button
+                   onClick={() => {
+                     setIsOpen(false);
+                     handleLogout();
+                   }}
+                   className="w-full text-center text-stone-400 hover:text-red-400 font-semibold py-2 transition-colors text-sm"
+                 >
+                   LOGOUT
+                 </button>
+               </div>
+             ) : (
+               <div className="pt-4 border-t border-stone-800 px-4">
+                 <Link
+                   href="/login"
+                   onClick={handleNavClick}
+                   className="block text-center border border-amber-500/50 text-amber-400 font-outfit font-semibold py-3 rounded-full tracking-wider hover:bg-amber-500/10 transition-all"
+                 >
+                   LOGIN
+                 </Link>
+               </div>
+             )}
 
             {/* Mobile language options tray */}
             <div className="pt-4 border-t border-stone-850 px-4 flex items-center justify-between">
@@ -263,7 +324,7 @@ export default function Navbar() {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-stone-950 border-t border-amber-900/30 text-amber-100 flex justify-around py-2 shadow-2xl backdrop-blur-md bg-opacity-95">
         <Link
           href="/"
-          onClick={(e) => handleNavClick(e, '/')}
+          onClick={handleNavClick}
           className={`flex flex-col items-center justify-center space-y-0.5 text-[10px] font-medium tracking-wide ${
             pathname === '/' ? 'text-amber-400 font-semibold' : 'text-stone-400'
           }`}
@@ -273,7 +334,7 @@ export default function Navbar() {
         </Link>
         <Link
           href="/pujas"
-          onClick={(e) => handleNavClick(e, '/pujas')}
+          onClick={handleNavClick}
           className={`flex flex-col items-center justify-center space-y-0.5 text-[10px] font-medium tracking-wide ${
             pathname.startsWith('/pujas') ? 'text-amber-400 font-semibold' : 'text-stone-400'
           }`}
@@ -283,7 +344,7 @@ export default function Navbar() {
         </Link>
         <Link
           href="/pujaris"
-          onClick={(e) => handleNavClick(e, '/pujaris')}
+          onClick={handleNavClick}
           className={`flex flex-col items-center justify-center space-y-0.5 text-[10px] font-medium tracking-wide ${
             pathname.startsWith('/pujaris') ? 'text-amber-400 font-semibold' : 'text-stone-400'
           }`}
@@ -293,7 +354,7 @@ export default function Navbar() {
         </Link>
         <Link
           href="/panchangam"
-          onClick={(e) => handleNavClick(e, '/panchangam')}
+          onClick={handleNavClick}
           className={`flex flex-col items-center justify-center space-y-0.5 text-[10px] font-medium tracking-wide ${
             pathname.startsWith('/panchangam') ? 'text-amber-400 font-semibold' : 'text-stone-400'
           }`}

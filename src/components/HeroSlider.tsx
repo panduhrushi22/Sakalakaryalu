@@ -13,6 +13,9 @@ export default function HeroSlider({ brandName, tagline, discoverLabel }: HeroSl
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleDiscoverClick = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('page-transition-next'));
+    }
     const nextSection = document.getElementById('discover-section');
     if (nextSection) {
       nextSection.scrollIntoView({ behavior: 'smooth' });

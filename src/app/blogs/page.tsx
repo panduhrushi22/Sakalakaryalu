@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { BookOpen, Clock, ArrowRight } from 'lucide-react';
 
-export const revalidate = 0; // Fresh database fetches always
+export const revalidate = 60; // Cache for 60s with background revalidation
 
 export default async function BlogsPage() {
   const blogs = await prisma.blog.findMany({

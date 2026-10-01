@@ -11,13 +11,29 @@ export interface DecodedToken {
 
 export function getDecodedToken(request: Request): DecodedToken | null {
   try {
+    let token: string | null = null;
+
+    // 1. Try to get from Authorization header
     const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
+
+    // 2. Try to get from HTTP-only cookie
+    if (!token || token === 'cookie_session_active') {
+      const cookieHeader = request.headers.get('cookie') || '';
+      const match = cookieHeader.match(/authToken=([^;]+)/);
+      if (match) {
+        token = decodeURIComponent(match[1]);
+      }
+    }
+
+    if (!token) {
       return null;
     }
-    const token = authHeader.split(' ')[1];
+
     return jwt.verify(token, JWT_SECRET) as DecodedToken;
-  } catch (e) {
+  } catch {
     return null;
   }
 }

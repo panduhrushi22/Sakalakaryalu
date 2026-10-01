@@ -169,42 +169,56 @@ export default function AdminDashboard() {
   const [pujariImagePreview, setPujariImagePreview] = useState<string>('');
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('adminToken');
-    if (!savedToken) {
-      router.push('/admin/login');
-      return;
-    }
-    setToken(savedToken);
+    let interval: NodeJS.Timeout;
 
-    const decoded = parseJwt(savedToken);
-    if (decoded) {
-      const role = decoded.role || 'admin';
-      setAdminUser({
-        name: decoded.name || 'Administrator',
-        email: decoded.email || '',
-        role: role,
-      });
+    const checkAuthAndLoad = async () => {
+      try {
+        const meRes = await fetch('/api/auth/me');
+        if (!meRes.ok) {
+          router.push('/login');
+          return;
+        }
+        const meData = await meRes.json();
+        if (!meData.success || meData.user.role !== 'admin') {
+          router.push('/user');
+          return;
+        }
+        
+        const user = meData.user;
+        setAdminUser({
+          name: user.name || 'Administrator',
+          email: user.email || '',
+          role: user.role || 'admin',
+        });
 
-      // Default active tab based on role permissions
-      if (role === 'content_manager') {
-        setActiveTab('pujas');
-      } else if (role === 'delivery_manager') {
-        setActiveTab('orders');
-      } else {
-        setActiveTab('bookings');
+        // Set token for backwards compatibility in API fetch headers
+        setToken('cookie_session_active');
+
+        // Default active tab based on role permissions
+        if (user.role === 'content_manager') {
+          setActiveTab('pujas');
+        } else if (user.role === 'delivery_manager') {
+          setActiveTab('orders');
+        } else {
+          setActiveTab('bookings');
+        }
+
+        loadDashboardData('cookie_session_active', user.role);
+
+        // Set up periodic polling for real-time notifications (every 15 seconds)
+        interval = setInterval(() => {
+          loadDashboardData('cookie_session_active', user.role, true);
+        }, 15000);
+      } catch (err) {
+        router.push('/login');
       }
+    };
 
-      loadDashboardData(savedToken, role);
+    checkAuthAndLoad();
 
-      // Set up periodic polling for real-time notifications (every 15 seconds)
-      const interval = setInterval(() => {
-        loadDashboardData(savedToken, role, true);
-      }, 15000);
-
-      return () => clearInterval(interval);
-    } else {
-      router.push('/admin/login');
-    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [router]);
 
   const loadDashboardData = async (jwtToken: string, userRole: string, silent = false) => {
@@ -324,10 +338,14 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    window.dispatchEvent(new Event('authChange'));
-    router.push('/admin/login');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.dispatchEvent(new Event('authChange'));
+      router.push('/login');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
   };
 
   // Change Booking Status Handler

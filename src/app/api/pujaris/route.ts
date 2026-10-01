@@ -47,13 +47,16 @@ export async function GET(request: Request) {
       const userLng = parseFloat(lngStr);
 
       if (!isNaN(userLat) && !isNaN(userLng)) {
-        results = results.map((pujari) => {
-          const dist = getHaversineDistance(userLat, userLng, pujari.lat, pujari.lng);
-          return {
-            ...pujari,
-            distance: Math.round(dist * 10) / 10, // Round to 1 decimal place
-          };
-        });
+        results = results
+          .map((pujari) => {
+            const dist = getHaversineDistance(userLat, userLng, pujari.lat, pujari.lng);
+            return {
+              ...pujari,
+              distance: Math.round(dist * 10) / 10, // Round to 1 decimal place
+            };
+          })
+          // Filter to only surrounded priests (within 15 km)
+          .filter((pujari) => pujari.distance <= 15.0);
 
         // Sort by distance ascending
         results.sort((a, b) => a.distance - b.distance);

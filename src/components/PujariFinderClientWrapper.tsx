@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Compass, MapPin, Phone, MessageCircle, Heart, ArrowRight } from 'lucide-react';
+import { Compass, MapPin, Phone, MessageCircle } from 'lucide-react';
 import PujariBookingModal from '@/components/PujariBookingModal';
 import { useLanguage } from '@/components/LanguageProvider';
 

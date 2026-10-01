@@ -5,7 +5,7 @@ import PujariFinderClientWrapper from '@/components/PujariFinderClientWrapper';
 import { cookies } from 'next/headers';
 import { i18nDictionary, LanguageCode } from '@/lib/i18n';
 
-export const revalidate = 0; // Fresh database fetches always
+export const revalidate = 60; // Cache for 60s with background revalidation
 
 // Haversine Formula for distance calculation
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -64,13 +64,16 @@ export default async function PujarisPage({
     const lng = parseFloat(userLngStr);
 
     if (!isNaN(lat) && !isNaN(lng)) {
-      results = results.map((pujari) => {
-        const dist = getDistance(lat, lng, pujari.lat, pujari.lng);
-        return {
-          ...pujari,
-          distance: Math.round(dist * 10) / 10, // Round to 1 decimal place
-        };
-      });
+      results = results
+        .map((pujari) => {
+          const dist = getDistance(lat, lng, pujari.lat, pujari.lng);
+          return {
+            ...pujari,
+            distance: Math.round(dist * 10) / 10, // Round to 1 decimal place
+          };
+        })
+        // Filter to only surrounded priests (within 15 km)
+        .filter((pujari) => pujari.distance <= 15.0);
 
       // Sort by proximity ascending
       results.sort((a, b) => a.distance - b.distance);

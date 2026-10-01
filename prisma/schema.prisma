@@ -194,3 +194,12 @@ model FestivalTranslation {
   festival     Festival @relation(fields: [festivalId], references: [id], onDelete: Cascade)
   @@unique([festivalId, languageCode])
 }
+
+model Otp {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+

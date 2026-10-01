@@ -9,7 +9,7 @@ import PujaStepsStepper from '@/components/PujaStepsStepper';
 import { cookies } from 'next/headers';
 import { i18nDictionary, getLocalized, LanguageCode } from '@/lib/i18n';
 
-export const revalidate = 0; // Fresh queries always
+export const revalidate = 60; // Cache for 60s with background revalidation
 
 const stepTranslations: Record<string, Record<string, { title: string; desc: string }>> = {
   te: {
